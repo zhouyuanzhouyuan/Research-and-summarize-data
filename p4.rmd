@@ -1,0 +1,413 @@
+葡萄酒相关成分影响探索性数据分析
+========================================================
+```{r global_options,include=FALSE }
+knitr::opts_chunk$set(message=FALSE,warning=FALSE,echo=FALSE)
+#这个部分的代码，主要用于对对该项目内所使用到的R的包使用情况说明
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(knitr)
+library(GGally)
+library(memisc)
+library(lattice)
+library(MASS)
+```
+#葡萄酒数据集的概况
+
+```{r }
+#这个部分的代码，主要用于对对该项目内所使用到的R的包使用情况说明
+# 此部分主要是数据载入部分
+df<-read.csv("wineQualityReds.csv")
+str(df)
+summary(df)#查看数据集的总体情况
+```
+
+
+# 单变量图形。
+```{r }
+#这个部分主要分析quanlity变量的直方图分布情况
+qplot(x=quality,data = df)
+summary(df$quality)
+```
+
+上图分析了quanlity变量的直方图的分布情况，从图中可以看出在葡萄酒变量上，基本呈现出了正态分布。
+
+```{r }
+#这个部分主要分析alcohol变量的直方图分布情况
+qplot(x=alcohol,data = df,binwidth=0.1,xlim = c(8.4,13))
+ 
+summary(df$alcohol)
+
+```
+
+上图分析酒精度变量的分布,从图中可以看出大量的葡萄酒酒精度数在9-11度之间，呈现出了斜分布,酒精度的中位数在10.2度。
+
+```{r }
+#这个部分主要分析pH变量的直方图分布情况。
+qplot(x=pH,data = df,binwidth=0.05)
+summary(df$pH)
+```
+
+上图分析PH值的分布：葡萄酒的PH分布呈现出了类似正态分布，最多的葡萄酒数量的PH值为3.3，PH的均值和中位数在3.31左右。
+
+```{r}
+#这个主要对sulphate变量的直方图分布，并根据基本统计信息设置了组距及长尾截断的位置
+qplot(x=sulphates,data=df,binwidth=0.025,xlim = c(0,1.5))
+summary(df$sulphates)
+```
+
+上图分析葡萄酒中的硫酸盐的含量分布情况，硫酸盐的含量存在长尾帆布的情况,我们排除了这些分布后，得出下面的图形，分布近似正态分布
+
+```{r }
+#这个部分主要分析 density的直方图分布情况，并且设定了组距为0.0001
+qplot(x=density,data=df,binwidth=0.0001)
+summary(df$density)
+```
+
+上图分析了葡萄酒中的密度变量的分布情况,在下图中明显呈现出了正态分布
+
+```{r }
+#这个部分主要分析总二氧化硫含量的分布，并且对x轴进行了对数变换，
+qplot(x=total.sulfur.dioxide,data=df,binwidths=10,xlim = c(0,150))+
+  scale_x_log10()
+summary(df$total.sulfur.dioxide)
+```
+
+上图分析了葡萄酒中的总二氧化硫量的分布.分布中存在的长尾现象需要排除,从分布上看，二氧化硫总量呈现出了正态分布的情况。
+
+```{r}
+# 这个部分主要分析free.sulfur变量的直方图分布情况
+qplot(x=free.sulfur.dioxide,data=df,binwidth=0.1,xlim = c(0,40))+
+  scale_x_log10()
+summary(df$free.sulfur.dioxide)
+
+```
+
+上图分析了葡萄酒游离二氧化硫量的分布情况,排除其中长尾的数据分布，得到的分布呈现出了斜分布的趋势，经过对数变换后，呈现出正态分布。
+
+```{r }
+# 这各部分主要分析chlorides的直方图分布情况，并且设置了相应的组距和剔除了长尾现象
+qplot(x=chlorides,data = df,binwidth=0.01,xlim = c(0,0.26))
+summary(df$residual.sugar)
+```
+
+上图分析了葡萄酒中氯化物含量的分布情况，其中有明显的异常产物的现象，需要剔除长尾的现象,剔除了长尾信息后，分布呈现出正态分布。
+
+```{r}
+#这个部分主要分析residual.suguar变量的分布直方图，并且绘制了折线图
+qplot(x=residual.sugar,data = df,binwidth=0.1,xlim = c(0,6),geom = "freqpoly")
+summary(df$residual.sugar)
+```
+
+上图分析了葡萄酒中残糖的分布情况,数据中存在长尾现象，剔除了长尾信息后，得到的分布为类似正态分布
+
+```{r}
+#这个部分主要分析ctric.acid变量的分布直方图，并且绘制了折线图
+qplot(x=citric.acid,data = subset(df,citric.acid!=0),binwidth=0.01,geom = "freqpoly")
+summary(df$citric.acid)
+```
+
+上图分析了葡萄酒中柠檬酸的分布情况,明显呈现出了斜分布的情况，在数据中大量存在柠檬酸为0的情况，分析中剔除了为零的数据，在这里明显看出在柠檬酸等于0.5位置出现了大量的分布，并且出现了多峰分布的情况
+
+```{r}
+#这个部分主要分析volatile.acidity变量的分布直方图，并且绘制了折线图
+qplot(x=volatile.acidity,data = df,xlim = c(0,1.2),geom = "freqpoly")
+summary(df$volatile.acidity)
+```
+
+上图分析了挥发酸在葡萄酒中的分布情况,删除其中的长尾数据,数据呈现出了类似正态分布的情况
+
+```{r}
+#这个部分主要分析fixed.acidity变量的分布直方图，并且绘制了折线图
+qplot(x=fixed.acidity,data = df,binwidth=0.5,geom = "freqpoly")
+```
+
+上图分析了非挥发性酸在葡萄酒样本中的分布情况,分布类似正态分布
+# 单变量分析
+### 数据集结构如何?
+葡萄酒数据集中包含了1599个样本数据，包含了13个变量，非挥发性酸含量、挥发性酸含量、柠檬酸含量、残糖的含量、氯化物的含量、游离二氧化硫含量，二氧化硫含量、密度、PH值、硫酸盐含量、酒精度及打分的情况。
+根据上面的分析，我们得出的情况如下<ol><li>13个变量中连续分布的变量大多呈现出正态分布</li>
+<li>葡萄酒的评分是我们关注的重要内容，多数葡萄酒评分集中在5和6分</li>
+<li>葡萄酒的酒精度数大多数分布在9.5到11.1度之间</li>
+<li>葡萄酒的PH值大多数在3.4——3.6之间，呈酸性</li>
+</ol>
+### 数据集中最感兴趣的特征是那些?
+最有兴趣的是：葡萄酒评分的分布、酒精度的分布、各类酸的分布、糖类含量的分布。
+### 数据集中哪些其他因素将有助于你分析你有兴趣的因素？
+酸的组成由多种，互相之间有什么影响？数据集中那些分布存在长尾线性，是否异常，存在为0的值吗？为什么，是否所有影响因子都呈现出正态分布的情况。如果不是正态分布，为什么？
+### 你有在数据集中根据已有变量创建新的变量吗？
+<ol>
+<li>在分析硫化物的时候，创建了新变量记录游离和非游离二氧化硫的总量和来分析葡萄酒中二氧化硫对评分的影响</li>
+<li>在分析酸和PH值之间的关系是，创建了新变量把所有的非挥发性酸、挥发性酸、柠檬酸相加后得出了总酸变量</li>
+</ol>
+###  您调查的功能，有任何不寻常的分布？您是否对数据执行任何操作来整理、调整或更改数据的格式？如果是的话，你为什么这样做？
+调查的13个因素的分布中，有一些呈现出了斜分布，双峰分布，在自然统计中都属于不寻常分布，对数据集的操作主要根据绘制出的直方图，在分布中存在了大量的异常数据，包括长尾数据，在图形调整过程中对这些长尾数据进行了截断。对数据内中大量出现的0数据进行了剔除操作,对二氧化硫总量中进行了对数变换，选择这种变换主要是考虑到两种不同的均值差异较大，进行了对数变换后，呈现出了正态分布。
+# 二个变量图形部分
+```{r fig.width=10,fig.height=10}
+#这个部分主要对数据集中的所有变量，自动化的两两配对并分析散点图及相关系数
+ggpairs(df,upper=list(continuous=wrap("cor",size=2)))
+```
+
+从上面图中，主要观察这些内容都是定量变量之间的关系，主要是质量评分和其他变量之间的关系，我们看出质量评分和酒精度、非游离酸度、氯化物的含量呈现出的相关系数较高，下面我们将按照相关系数的从高到低的数量，分析变量和评分之间的关系之间的关系。
+<p>按照葡萄酒的分级类别对酒精度的均值和中位数进行了分析，可以看出随着酒精度数的增加，红酒分级评分变高，但是在评级为5的地方出现了异常，因为这里酒精度数突然下降了</p>
+
+
+```{r}
+#这个部分主要对葡萄酒评分和究竟度的关系进行分析，这里使用箱线图表示不同评分的酒精度箱线图
+factor_quality<-cut(df$quality,c(3,4,5,6,7,8,9,10),right = FALSE)
+ggplot(aes(x=factor_quality,y=alcohol),data =df )+
+  geom_boxplot(fill="red")+
+  labs(title="quality VS alcohol")
+ 
+```
+
+上图分析了葡萄酒评分和酒精度数的关系，其中看出，在质量为5的位置出现了无论中位数，均值，箱体长度都较低，而且出现了较多的异常点。
+
+```{r}
+#这个部分主要对葡萄酒评分和硫酸盐的含量的关系进行分析，这里使用箱线图表示不同评分的硫酸盐含量的箱线图
+ggplot(aes(x=factor_quality,y=volatile.acidity),data = df)+
+  geom_boxplot(fill="red")+
+  labs(title="quality VS volatile.acidity")
+
+```
+
+上图分析了葡萄酒评分和挥发性酸的关系图，其中看出，整个箱体的中位数呈现出了逐渐降低的过程过程，表现出明显的线性关系。
+
+```{r}
+#这一部分主要分析了sulphate和评分之间的关系箱线图
+ggplot(aes(x=factor_quality,y=sulphates),data = df)+
+  geom_boxplot(fill="red")+
+  labs(title="quality VS suphates")
+```
+
+上图分析了葡萄酒评分和硫酸盐含量之间的关系，其中看出程序出了一定的线性关系，但是在评分为5的位置出现了明显的异常点数量
+
+```{r}
+#这一部分主要分析了citric.acid和评分之间的关系箱线图
+ggplot(aes(x=factor_quality,y=citric.acid),data = df)+
+  geom_boxplot(fill="red")
+  labs(title="quality VS ctric.acid")
+  
+```
+
+上图分析了葡萄酒评分和柠檬酸盐含量之间的关系，其中看出程序出了一定的线性关系。
+
+```{r}
+#这一部分主要分析了fixed.acidity和评分之间的关系箱线图
+ggplot(aes(x=factor_quality,y=fixed.acidity),data = df)+
+  geom_boxplot(fill="red")
+  labs(title="quality VS fixed.acidity")
+```
+
+上图分析了非游离酸和评分之间的关系，在这个关系中，在评分为5的位置上面出现了大量的异常数据点。
+
+```{r}
+#这一部分主要分析了chlorides和评分之间的关系箱线图
+ggplot(aes(x=factor_quality,y=chlorides),data = df)+
+  geom_boxplot(fill="red")+
+  labs(title="quality VS chlorides")
+```
+
+上图中分析了氯化物和质量评分之间的关系，在评分为5,6的位置出现了大量的异常数据
+
+```{r}
+#这一部分主要分析了density和评分之间的关系箱线图
+ggplot(aes(x=factor_quality,y=density),data = df)+
+  geom_boxplot(fill="red")+
+  labs(title="quality VS density")
+```
+
+分析密度和葡萄酒评分之间的关系，在这个关系中，在评分等于5,6 的位置出现了大量的异常数据
+
+```{r}
+#这一部分主要分析了residual.sugar和评分之间的关系箱线图
+ggplot(aes(x=factor_quality,y=residual.sugar),data=df)+
+  geom_boxplot(fill="red")+
+  labs(title="quality VS residual.sugar")
+```
+
+上图中分析了糖含量和葡萄酒质量之间的关系。
+
+```{r}
+#这一部分主要分析了pH和评分之间的关系箱线图
+ggplot(aes(x=factor_quality,y=pH),data=df)+
+  geom_boxplot(fill="red")+
+  labs(title="quality VS pH")
+```
+上图分析了pH值和葡萄酒质量之间的关系，这里在评分为5,6的位置出现了大量的异常
+```{r}
+#这一部分主要分析了density和评分之间的关系箱线图
+ggplot(aes(x=alcohol,y=density),data = df)+
+  geom_line(stat = "summary",fun.y=mean)+
+  stat_smooth()+
+  labs(title="alcohol VS density")
+```
+
+上图分析了酒精度和密度之间的关系
+
+```{r}
+#这一部分主要分析了fixed.acidity和评分之间的关系箱线图
+df$acid<-df$fixed.acidity+df$fixed.acidity+df$citric.acid
+ggplot(aes(x=acid,y=pH),data = df)+
+  geom_line(stat = "summary",fun.y=mean)+
+  stat_smooth()+
+  labs(title="acid VS pH")
+```
+
+上图分析了酸度和pH值之间的关系，在图中有明显的酸度高二ph值高的情况，这也和我们的化学常识是符合的
+
+```{r}
+#这一部分主要分析了酒精度和密度之间的关系
+ggplot(aes(x=alcohol,y=density),data = df)+
+  geom_line(stat = "summary",fun.y=mean)+
+  stat_smooth()+
+  labs(title="alcohol VS density")
+
+```
+
+上图分析了酒精度和密度之间的关系，酒精含量高则葡萄酒密度较低，这也符合化学常识。因为葡萄酒大量含量为水，酒精比水密度低。
+
+```{r}
+# 主要绘制residual.sugar和density之间的线性关系并且进行了平滑处理
+ggplot(aes(x=density,y=residual.sugar),data=df)+
+  geom_line(stat = "summary",fun.y=mean)+
+  stat_smooth()+
+  labs(title="residual.sugar VS density")
+```
+
+上图分析了密度和含糖量之间的关系，含糖量越高，密度越高，这也符合我们物理常识。
+
+# 二个变量之间的分析
+
+### 谈谈你在这部分调查中观察到的一些关系。如何感兴趣的功能（S）随数据集中的其他功能？
+在二元变量分析中，我感兴趣的点主要是关注于葡萄酒的评分和其他变量之间的关系有什么样的联系，为此使用了ggparis分析了所有数据集变量中的两两关系，并且从中分析了其中关联程度较高的变量之间的关系。在这些关系中，很多的变量和葡萄酒评分之间呈现出了明显的线性关系，但是这种线性关系，在评分为5的葡萄酒中存在大量的异常值，即不符合线性回归的情况。
+
+### 你是否观察到其他特征之间的有趣关系（而不是主要特征）？
+分析了酒精度和密度，糖度和密度之间的关系，酸度和pH之间的关系，这些都不是主要特征，但是符合我们的化学常识。
+
+### 你发现的最强烈的关系是什么？?
+酒精度和葡萄酒评分之间呈现出的相关系数为0.476的相关系数，在这个关系中，我们根据分析，可以推论对葡萄酒评分影响最大的因素为葡萄酒酒精度数，即酒精度数越高，则葡萄酒评分越高。
+
+
+
+# 多变量的图形
+
+```{r}
+#这个部分主要根据酒精度、硫化物及质量评分绘制了散点图
+ggplot(aes(x=alcohol,y=sulphates),data = df)+
+  geom_point(aes(color=factor_quality),alpha=0.5)+
+  ylim(0.4,1.25)+
+  scale_color_brewer(palette = "Blues")
+  labs(title="alcohol VS sulphates VS quality")
+```
+
+图1分析了酒精度，硫酸盐和质量评分之间的关系，从图中可以看出，酒精含量高,硫酸盐含量较高的位置出现的评分高的数量角度
+
+
+```{r echo=FALSE, Plot_Two}
+#这个部分主要根据酒精度、挥发性酸及质量评分绘制了散点图
+ggplot(aes(x=alcohol,y=volatile.acidity),data = df)+
+  geom_point(aes(color=factor_quality),alpha=0.5)+
+  scale_color_brewer(palette = "Blues")+
+  labs(title="alcohol VS volatile.acidity VS quality")
+```
+
+观察上面的图形分析酒精度，挥发性酸和评分之间的关系,图中观察可以看出，颜色较浅的高评分葡萄酒集中在度数较高，挥发性酸含量较低的位置。
+
+
+
+
+
+```{r echo=FALSE, Plot_Three}
+#这个部分主要根据酒精度、柠檬酸及质量评分绘制了散点图
+ggplot(aes(x=alcohol,y=citric.acid),data = df)+
+  scale_color_brewer(palette = "Blues")+
+  geom_point(aes(color=factor_quality))+
+  labs(title="alcohol VS citric.acid VS quality")
+```
+
+### 选取了相关系数绝对值较大的5个变量迭代构建了简单线性回归模型
+
+下表所示，quality=2.646+0.309alcohol-1.265volatile.acidity+0.695sulphate-0.079citric.acid
+
+```{r}
+m1<-lm(I(quality~alcohol),data=df)
+m2<-update(m1,~ .+volatile.acidity)
+m3<-update(m2,~.+sulphates)
+m4<-update(m3,~.+citric.acid)
+m5<-update(m4,~.+chlorides)
+mtable(m1,m2,m3,m4)
+
+```
+# 多变量分析部分
+
+### 谈谈你在这部分调查中观察到的一些关系？
+<ol>
+<li>主要调中观察到的关系包括，酒精度数、挥发性、质量评分之间的关系，观察到酒精度数较高的葡萄酒、游离酸较低的葡萄酒评分较高。
+</li>
+<li>观察了酒精度数、硫酸盐、质量评分之间的关系，观察到酒精度数较高，硫酸盐含量较高的葡萄酒评分较高。
+</li>
+<li>
+观察了酒精度数、柠檬酸、质量评分之间的关系，观察到酒精度数高，柠檬酸含量较高的葡萄酒评分较高。
+</li>
+<li>
+观察了
+上图分析了硫酸盐、柠檬酸、评分之间的关系，看出硫酸盐含量高，柠檬酸含量高的葡萄酒评分较高。
+</li>
+</ol>
+
+### 是否有任何有趣或令人惊讶的功能之间的相互作用
+
+### 可选：是否创建了数据集的任何模型？讨论你的模型的优点和局限性。.
+建立了一个简单的迭代的现象回归模型，模型的变量选取主要根据相关系数的绝对值的大小选取了酒精度数、游离酸、硫化物、柠檬酸作为变量构建了一个线性模型。这个模型的优点可以通过简单的葡萄酒中化学成分来判断葡萄酒的评分，局限性，数据量较少，只有1559个相关数据，葡萄酒酿制的时间字段缺失，这个对葡萄酒的品质可能有较高的影响。
+
+------
+# 反映出的结果
+###图1
+```{r}
+qplot(x=alcohol,data = df,binwidth=0.1,xlim = c(8.4,13),color="red")
+
+```
+
+###图1的描述
+
+从图上我们可以看出，在葡萄酒数据集中，大量酒精最多的度数在9-10度之间，在这个部分我们可以这个图中，葡萄酒的酒精含量中，高度酒数量很少。
+
+###图2
+
+```{r}
+factor_quality<-cut(df$quality,c(3,4,5,6,7,8,9,10),right = FALSE)
+ggplot(aes(x=factor_quality,y=alcohol),data =df )+
+  geom_boxplot(fill="red")+
+  labs(title="quality VS alcohol")
+```
+
+###图2 的描述
+
+根据对数据集中多对变量的分析，我们看出酒精度数是对葡萄酒品质影响最高的变量，他们两者之间相关系数为0.47,从箱线图中，我们可以看到随着酒精度数的中位数不断的增加，葡萄酒的评分也不断的增大，但是在评分为5的位置出现了大量的异常值，集中在酒精度较高的部分，这里表面酒精度对葡萄酒质量评分具有线性相关的关系，我们后面主要就关注酒精度和评分之间的关系。
+
+###图3
+```{r}
+ggplot(aes(x=alcohol,y=sulphates),data = df)+
+  geom_point(aes(color=factor_quality),alpha=0.5)+
+  ylim(0.4,1.25)+
+  scale_color_brewer(palette = "Blues")+
+  labs(title="alcohol VS sulphates VS quality")
+```
+
+###图3的描述
+
+因为我们关注的焦点在于葡萄酒中影响品质评分的相关变量，图3我们分析了酒精度和硫化物含量之间的关系，在这里选择硫化物是因为在所有相关系数中，这两个是数量较大并且呈现出正相关系数的变量，所以，我们是否能得出推论，我们购买更高品质的葡萄酒的时候，应该先去选择酒精度高的葡萄酒，然后去选择硫化物含量较高的。
+# 反映出的效果
+
+对1599条数据进行分析后，数据中包含了13个原始的变量，观察了数据局中的单一变量分析，两根个变量分析及多个变量的分析。在分析的过程中，首席对单个变量进行了直方图的分析，大多数变量的分布都呈现出了正态分布的图形，这和自然界中的分布规律类似。个别变量在经过变换后也呈现出了正太分布。在两个变量的分析过程中，主要关注的是其他变量对葡萄酒评分的影响，绘制了其余多个变量对葡萄酒评分的影响，发现其中酒精度对葡萄酒评分的影响较大，其次依次为非挥发性酸、硫酸盐、柠檬酸、氯化物等对葡萄酒评分的影响较大，绘制的图形中发现在评分为5的葡萄酒中出现了很多与线性回归不一致的点。在多个变量分析中，分析了多种变量对葡萄酒评分的影响，并且构建了一个简单的线性回归模型，其中选取了5个对评分影响较大的变量作为模型的变量迭代出一个简单的的线性回归模型，但是由于这个模型中数据量较小、缺少时间，丹宁等可能影响葡萄酒品质的其他因素素，该模型具有很大的局限性。在这个过程中，我一直为评分为5的葡萄酒质量影响因素感到异常。
+
+# 在探索过程中遇到的问题
+
+<p>在这个探索过程中，所有变量之间，一些呈现出了正态分布，另外一些则表现出了较多的异常值，这个情况比较让我困惑，对单个变量的分布，使用对数变换后，解决了部分的问题，但是还是有一些呈现出了双峰分布的情况。</p>
+<p>在探索过程中，对quality变量的认定过程中，认定的是序列变量，但是在绘图的过程中，程序已知认定为了连续变量，所以我查阅了相关文档，使用cut函数先对quality数据进行分组后，才得到了相关分组信息，绘制了箱线图</p>
+<p>对这个项目中，我们从目前具有的数据集进行分析，能否收集到更多变量，更多数量的数据集，研究究竟哪些变量能够进一步影响葡萄酒品质，甚至到葡萄酒价格的因素，是我很有兴趣的问题。</p>
+
+#参考的文章
+<p>影响红酒质量的因素 http://www.wine-world.com/culture/pj/20130821095156901</p>
+<p>影响葡萄酒品质的六大因素 http://www.yhj9.com/article-1933.html</p>
